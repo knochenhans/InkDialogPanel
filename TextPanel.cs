@@ -160,9 +160,7 @@ public partial class TextPanel : RichTextLabel
         var textBuffer = "";
 
         foreach (var logSection in logSections)
-        {
             textBuffer += logSection.PrepareBBCode();
-        }
 
         ParseBbcode(textBuffer);
     }
@@ -281,10 +279,10 @@ public partial class TextPanel : RichTextLabel
         PrintStep();
     }
 
-    private void RemoveParagraphs(int count)
-    {
-        GD.Print(String.Format("Remove {0}", count));
-        for (int i = 0; i < count - 1; i++)
-            RemoveParagraph(GetParagraphCount() - 1);
-    }
+    // private void RemoveParagraphs(int count)
+    // {
+    //     GD.Print(String.Format("Remove {0}", count));
+    //     for (int i = 0; i < count - 1; i++)
+    //         RemoveParagraph(GetParagraphCount() - 1);
+    // }
 }
