@@ -1,0 +1,6 @@
+[gd_resource type="Theme" load_steps=2 format=3 uid="uid://6n5ylvh58xsf"]
+
+[ext_resource type="FontFile" uid="uid://bixuhjeq2byg3" path="res://fonts/droid-sans/DroidSans.ttf" id="1_uyfdj"]
+
+[resource]
+default_font = ExtResource("1_uyfdj")

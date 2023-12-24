@@ -1,0 +1,16 @@
+[remap]
+
+importer="ink"
+type="Resource"
+uid="uid://di8kg01hirxba"
+path="res://.godot/imported/Brock.ink-c1af8d07e25f3f59cf1add4654204b74.res"
+
+[deps]
+
+source_file="res://Brock.ink"
+dest_files=["res://.godot/imported/Brock.ink-c1af8d07e25f3f59cf1add4654204b74.res"]
+
+[params]
+
+is_main_file=true
+compress=true
