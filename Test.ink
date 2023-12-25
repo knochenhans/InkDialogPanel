@@ -1,5 +1,6 @@
-VAR name = "Person"
-VAR color = "\#ff00d0"
+VAR character_name = "Person"
+VAR character_title_color = "\#ff00d0"
+VAR character_body_color = "\#ffd0d0"
 
 -> Dialog
 

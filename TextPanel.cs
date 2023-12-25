@@ -3,10 +3,11 @@ using System;
 using GodotInk;
 using System.Collections.Generic;
 using System.Linq;
+using Godot.Collections;
 
 enum EntryType
 {
-    Action,
+    Default,
     Player,
     Character
 }
@@ -17,21 +18,19 @@ public class LogEntry
     public string BodyText { get; set; }
 
     public Color TitleColor { get; set; }
-    public Color BodyColor { get; set; } = Colors.White;
+    public Color BodyColor { get; set; }
 
     public bool Active { get; set; } = true;
 
-    float Darkening { get; set; }
-
-    public LogEntry(string titleText = "", string bodyText = "", Color titleColor = new Color(), float darkening = 0.3f)
+    public LogEntry(string titleText = "", string bodyText = "", Color titleColor = new Color(), Color bodyColor = new Color())
     {
         TitleText = titleText;
         BodyText = bodyText;
         TitleColor = titleColor;
-        Darkening = darkening;
+        BodyColor = bodyColor;
     }
 
-    public virtual string PrepareBBCode()
+    public virtual string PrepareBBCode(float darkening = 0.0f)
     {
         var text = "";
 
@@ -39,20 +38,15 @@ public class LogEntry
 
         if (TitleText != "")
         {
-            if (!Active)
-                color = color.Darkened(Darkening);
 
-            text += string.Format("[color={0}]", color.ToHtml());
+            text += string.Format("[color={0}]", color.Darkened(darkening).ToHtml());
             text += string.Format("[b]{0}[/b]", TitleText.ToUpper());
             text += " - [/color]";
         }
 
         color = BodyColor;
 
-        if (!Active)
-            color = color.Darkened(Darkening);
-
-        text += string.Format("[color={0}]{1}[/color]", color.ToHtml(), BodyText);
+        text += string.Format("[color={0}]{1}[/color]", color.Darkened(darkening).ToHtml(), BodyText);
         return text;
     }
 }
@@ -66,7 +60,7 @@ public class LogEntryChoice : LogEntry
         TitleColor = titleColor;
     }
 
-    public override string PrepareBBCode()
+    public override string PrepareBBCode(float darkening = 0.0f)
     {
         return BodyText;
     }
@@ -87,7 +81,7 @@ public class LogSection
         var text = "";
 
         foreach (var logEntry in logEntries)
-            text += logEntry.PrepareBBCode();
+            text += logEntry.PrepareBBCode(logEntry.Active ? 0.0f : 0.3f);
 
         return text;
     }
@@ -101,17 +95,6 @@ public class LogSection
 public class LogManager
 {
     List<LogSection> logSections = new();
-
-    string Name { get; set; }
-    Color CharacterColor { get; set; }
-    float Darkening { get; set; }
-
-    public LogManager(string name, Color characterColor, float darkening)
-    {
-        Name = name;
-        CharacterColor = characterColor;
-        Darkening = darkening;
-    }
 
     public void AddEntry(LogEntry logEntry)
     {
@@ -159,25 +142,27 @@ public partial class TextPanel : RichTextLabel
     public delegate void StoryFinishedEventHandler();
 
     [Export]
-    Color actionTextTitleColor = Colors.White;
+    float inactiveDarkening = 0.3f;
 
     [Export]
-    Color actionTextBodyColor = Colors.Wheat;
-
-    [Export]
-    Color playerTextTitleColor = Colors.White;
-
-    [Export]
-    Color playerTextBodyColor = Colors.Wheat;
-
-    [Export]
-    float darkening = 0.3f;
+    Godot.Collections.Dictionary<string, Color> logEntryColors = new()
+    {
+        ["default_title"] = Colors.Wheat,
+        ["default_body"] = Colors.White,
+        ["player_title"] = Colors.Pink,
+        ["player_body"] = Colors.White,
+        ["character_title"] = Colors.Blue,
+        ["character_body"] = Colors.White,
+        ["choice"] = Colors.Red,
+    };
 
     readonly List<string> visitedChoices = new();
 
     LogManager logManager;
 
     string characterName;
+    Color characterTitleColor;
+    Color characterBodyColor;
 
     public override void _Ready()
     {
@@ -190,10 +175,18 @@ public partial class TextPanel : RichTextLabel
     {
         MetaClicked += GetChoice;
 
-        characterName = story.FetchVariable<string>("name");
-        var characterColor = Color.FromHtml(story.FetchVariable<string>("color"));
+        characterName = story.FetchVariable<string>("character_name");
 
-        logManager = new(characterName, characterColor, darkening);
+        var characterTitleColorString = story.FetchVariable<string>("character_title_color");
+        var characterBodyColorString = story.FetchVariable<string>("character_body_color");
+
+        if (characterTitleColorString != "")
+            characterTitleColor = Color.FromHtml(characterTitleColorString);
+
+        if (characterBodyColorString != "")
+            characterBodyColor = Color.FromHtml(characterTitleColorString);
+
+        logManager = new();
 
         logManager.AddSection(PrepareText());
 
@@ -215,7 +208,7 @@ public partial class TextPanel : RichTextLabel
     {
         LogSection logSection = new();
 
-        EntryType lastEntryType = EntryType.Action;
+        EntryType lastEntryType = EntryType.Default;
 
         while (story.CanContinue)
         {
@@ -225,15 +218,11 @@ public partial class TextPanel : RichTextLabel
             {
                 LogEntry logEntry = new();
 
-                if (story.CurrentTags.Contains("Action"))
-                {
-                    logEntry.TitleColor = Colors.Gray;
-                    lastEntryType = EntryType.Action;
-                }
-                else if (story.CurrentTags.Contains("Player"))
+                if (story.CurrentTags.Contains("Player"))
                 {
                     // color = Player.DialogColor;
-                    logEntry.TitleColor = Colors.White;
+                    logEntry.TitleColor = logEntryColors["player_title"];
+                    logEntry.BodyColor = logEntryColors["player_body"];
 
                     if (lastEntryType != EntryType.Player)
                         logEntry.TitleText = "You";
@@ -243,13 +232,20 @@ public partial class TextPanel : RichTextLabel
                 else if (story.CurrentTags.Contains("Character"))
                 {
                     // color = Character.DialogColor;
-                    logEntry.TitleColor = Colors.Wheat;
-                    logEntry.BodyColor = Colors.Wheat;
+                    logEntry.TitleColor = characterTitleColor;
+                    logEntry.BodyColor = characterBodyColor;
 
                     if (lastEntryType != EntryType.Character)
                         logEntry.TitleText = characterName;
 
                     lastEntryType = EntryType.Character;
+                }
+                else
+                {
+
+                    logEntry.TitleColor = logEntryColors["default_title"];
+                    logEntry.BodyColor = logEntryColors["default_body"];
+                    lastEntryType = EntryType.Default;
                 }
 
                 logEntry.BodyText = storyText + "\n";
@@ -271,11 +267,11 @@ public partial class TextPanel : RichTextLabel
 
             foreach (InkChoice choice in story.CurrentChoices)
             {
-                var color = Colors.Red;
+                var color = logEntryColors["choice"];
 
                 // if (Story.VisitCountAtPathString(choice.PathStringOnChoice) > 0)
                 if (visitedChoices.Contains(choice.PathStringOnChoice))
-                    color = color.Darkened(darkening);
+                    color = color.Darkened(inactiveDarkening);
 
                 listContent += " - ";
                 listContent += string.Format("[color={0}]", color.ToHtml());
@@ -288,9 +284,7 @@ public partial class TextPanel : RichTextLabel
             logSection.AddEntry(new LogEntryChoice("", string.Format("[ol]{0}[/ol]", listContent)));
         }
         else
-        {
             EmitSignal(SignalName.StoryFinished);
-        }
 
         return logSection;
     }
@@ -299,7 +293,7 @@ public partial class TextPanel : RichTextLabel
     {
         LogSection logSection = new();
 
-        logSection.AddEntry(new LogEntry("You", text + "\n\n", Colors.Pink));
+        logSection.AddEntry(new LogEntry("You", text + "\n\n", logEntryColors["player_title"], logEntryColors["player_body"]));
 
         return logSection;
     }
