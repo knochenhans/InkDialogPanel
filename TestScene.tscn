@@ -50,8 +50,7 @@ color = Color(0, 0, 0, 1)
 
 [node name="TextPanel" parent="HBoxContainer/ColorRect/MarginContainer/ColorRect" instance=ExtResource("1_3o727")]
 layout_mode = 2
-offset_top = 2.0
 offset_right = 307.0
-offset_bottom = 630.0
+offset_bottom = 628.0
 size_flags_horizontal = 3
-Story = ExtResource("2_qxs8i")
+story = ExtResource("2_qxs8i")

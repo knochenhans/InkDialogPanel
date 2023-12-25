@@ -1,8 +1,7 @@
-[gd_scene load_steps=4 format=3 uid="uid://i4h31b8u0b3p"]
+[gd_scene load_steps=3 format=3 uid="uid://i4h31b8u0b3p"]
 
 [ext_resource type="FontFile" uid="uid://dpogajdf4niv3" path="res://fonts/Lora/static/Lora-Regular.ttf" id="1_f2k3y"]
 [ext_resource type="Script" path="res://TextPanel.cs" id="1_wdidv"]
-[ext_resource type="Resource" uid="uid://di8kg01hirxba" path="res://Brock.ink" id="3_bnqhv"]
 
 [node name="TextPanel" type="RichTextLabel"]
 theme_override_fonts/normal_font = ExtResource("1_f2k3y")
@@ -11,4 +10,3 @@ bbcode_enabled = true
 scroll_following = true
 meta_underlined = false
 script = ExtResource("1_wdidv")
-Story = ExtResource("3_bnqhv")

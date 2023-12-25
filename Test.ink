@@ -1,4 +1,5 @@
 VAR name = "Person"
+VAR color = "\#ff00d0"
 
 -> Dialog
 
